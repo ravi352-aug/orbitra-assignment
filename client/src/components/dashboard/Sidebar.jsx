@@ -1,17 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
   LayoutDashboard,
-  LogOut,
   Map,
   Plane,
   Settings,
   Share2,
   Sparkles,
   Upload,
+  User,
   X,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
-import toast from "react-hot-toast";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const navItems = [
@@ -23,12 +22,9 @@ const navItems = [
 ];
 
 const SidebarContent = ({ onClose }) => {
-  const { logout } = useAuth();
-
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-  };
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const userName = user?.name || "Traveler";
 
   return (
     <div className="flex h-full flex-col border-r border-white/10 bg-slate-950/70 shadow-2xl shadow-black/40 backdrop-blur-2xl">
@@ -106,16 +102,30 @@ const SidebarContent = ({ onClose }) => {
         ))}
       </nav>
 
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/10 px-5 py-4">
+        <div className="flex items-center gap-3 rounded-3xl bg-white/5 p-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-3xl bg-cyan-400/10 text-cyan-300 text-sm font-bold">
+            {userName
+              .split(" ")
+              .map((part) => part[0])
+              .filter(Boolean)
+              .slice(0, 2)
+              .join("")}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">{userName}</p>
+            <p className="truncate text-xs text-slate-500">View profile</p>
+          </div>
+        </div>
         <button
           type="button"
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+          onClick={() => {
+            navigate("/profile");
+            onClose?.();
+          }}
+          className="mt-3 flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/5">
-            <LogOut className="h-4 w-4" />
-          </span>
-          Logout
+          Go to profile
         </button>
       </div>
     </div>

@@ -10,7 +10,13 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import UploadPage from "./pages/UploadPage";
+import ItineraryHistory from "./pages/ItineraryHistory";
+import ItineraryDetails from "./pages/ItineraryDetails";
+import SharedItinerary from "./pages/SharedItinerary";
+import SharedTrips from "./pages/SharedTrips";
 
 export default function App() {
   return (
@@ -43,6 +49,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+
           <Route
             path="/upload"
             element={
@@ -50,7 +57,8 @@ export default function App() {
                 <UploadPage />
               </ProtectedRoute>
             }
-          />{" "}
+          />
+
           <Route
             path="/dashboard"
             element={
@@ -59,33 +67,58 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
-            path="/itineraries"
+            path="/profile"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Profile />
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/shared"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/settings"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <Settings />
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/itineraries"
+            element={
+              <ProtectedRoute>
+                <ItineraryHistory />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/itinerary/:id"
+            element={
+              <ProtectedRoute>
+                <ItineraryDetails />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/share/:shareId" element={<SharedItinerary />} />
+
+          <Route
+            path="/shared"
+            element={
+              <ProtectedRoute>
+                <SharedTrips />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </Router>
   );
 }
+

@@ -8,7 +8,8 @@ import {
   Settings,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
@@ -23,11 +24,38 @@ const getInitials = (name = "Traveler") =>
 const Navbar = ({ onMenuClick, user }) => {
   const { logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    setProfileOpen(false);
     toast.success("Logged out successfully");
   };
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileOpen]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-2xl sm:px-6 lg:px-8">
@@ -66,9 +94,11 @@ const Navbar = ({ onMenuClick, user }) => {
           <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-cyan-300 ring-2 ring-slate-950" />
         </button>
 
-        <div className="relative">
+        <div className="relative" ref={profileRef}>
           <button
             type="button"
+            aria-haspopup="menu"
+            aria-expanded={profileOpen}
             onClick={() => setProfileOpen((current) => !current)}
             className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 py-1.5 pl-1.5 pr-3 transition hover:bg-white/10"
           >
@@ -103,11 +133,25 @@ const Navbar = ({ onMenuClick, user }) => {
                   </p>
                 </div>
                 <div className="p-1.5">
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white">
+                    <button
+                    type="button"
+                    onClick={() => {
+                      navigate("/profile");
+                      setProfileOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white"
+                  >
                     <User className="h-4 w-4" />
                     Profile
                   </button>
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate("/settings");
+                      setProfileOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-400 transition hover:bg-white/10 hover:text-white"
+                  >
                     <Settings className="h-4 w-4" />
                     Settings
                   </button>

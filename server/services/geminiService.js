@@ -1,39 +1,35 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-
-// Initialize Gemini
 const genAI = new GoogleGenerativeAI(
   process.env.GEMINI_API_KEY
 );
 
-
-// Use Gemini Model
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.0-flash",
 });
 
-
-
-// Generate Text Response
 const generateContent = async (prompt) => {
 
   try {
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(
+      prompt
+    );
 
-    const response = result.response.text();
+    const response = result.response;
 
-    if (!response) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    return response;
+    return response.text();
 
   } catch (error) {
 
-    console.error("Gemini Error:", error.message);
+    console.error(
+      "Gemini Full Error:",
+      error.message
+    );
 
-    throw new Error(`AI extraction failed: ${error.message}`);
+    throw new Error(
+      `AI extraction failed: ${error.message}`
+    );
 
   }
 

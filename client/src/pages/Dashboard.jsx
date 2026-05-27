@@ -194,7 +194,7 @@ const Dashboard = () => {
   const isGenerating = Boolean(generatingUploadId);
 
   return (
-    <DashboardLayout user={user}>
+    <DashboardLayout>
       <div className="space-y-6">
         <HeroSection user={user} />
 

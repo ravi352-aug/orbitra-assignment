@@ -1,19 +1,45 @@
 import { motion } from "framer-motion";
-import { Building2, CalendarDays, MapPin, Plane, Timer } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  Hash,
+  MapPin,
+  Plane,
+  Timer,
+  Train,
+  User,
+} from "lucide-react";
 
-const fields = [
+const fieldOrder = [
+  { key: "transportType", label: "Transport", Icon: MapPin },
   { key: "source", label: "Source", Icon: MapPin },
   { key: "destination", label: "Destination", Icon: MapPin },
   { key: "travelDate", label: "Travel date", Icon: CalendarDays },
+  { key: "departureTime", label: "Departure", Icon: Timer },
+  { key: "arrivalTime", label: "Arrival", Icon: Timer },
+  { key: "trainName", label: "Train name", Icon: Train },
+  { key: "trainNumber", label: "Train number", Icon: Train },
   { key: "airline", label: "Airline", Icon: Plane },
   { key: "hotel", label: "Hotel", Icon: Building2 },
-  { key: "timings", label: "Timings", Icon: Timer },
+  { key: "passengerName", label: "Passenger", Icon: User },
+  { key: "pnr", label: "PNR", Icon: Hash },
+  { key: "bookingReference", label: "Booking ref", Icon: Hash },
 ];
-
-const fallback = "Not found";
 
 const TravelSummary = ({ details }) => {
   const data = details || {};
+
+  const fields = fieldOrder.filter(
+    ({ key }) => data[key] !== undefined && data[key] !== null && String(data[key]).trim() !== ""
+  );
+
+  const defaultFields = [
+    { key: "source", label: "Source", Icon: MapPin },
+    { key: "destination", label: "Destination", Icon: MapPin },
+    { key: "travelDate", label: "Travel date", Icon: CalendarDays },
+  ];
+
+  const displayFields = fields.length ? fields : defaultFields;
 
   return (
     <motion.section
@@ -27,7 +53,7 @@ const TravelSummary = ({ details }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {fields.map(({ key, label, Icon }, index) => (
+        {displayFields.map(({ key, label, Icon }, index) => (
           <motion.div
             key={key}
             initial={{ opacity: 0, y: 10 }}
@@ -42,7 +68,7 @@ const TravelSummary = ({ details }) => {
               {label}
             </p>
             <p className="mt-1 break-words text-sm font-bold text-white">
-              {data[key] || fallback}
+              {String(data[key] || "Not available")}
             </p>
           </motion.div>
         ))}

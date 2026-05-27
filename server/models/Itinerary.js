@@ -25,6 +25,38 @@ const itinerarySchema = new mongoose.Schema(
       type: String,
     },
 
+    transportType: {
+      type: String,
+    },
+
+    trainName: {
+      type: String,
+    },
+
+    trainNumber: {
+      type: String,
+    },
+
+    pnr: {
+      type: String,
+    },
+
+    departureTime: {
+      type: String,
+    },
+
+    arrivalTime: {
+      type: String,
+    },
+
+    passengerName: {
+      type: String,
+    },
+
+    bookingReference: {
+      type: String,
+    },
+
     airline: {
       type: String,
     },
@@ -50,20 +82,33 @@ const itinerarySchema = new mongoose.Schema(
       type: String,
     },
 
+    // Parsed JSON extracted by AI
+    extractedData: {
+      type: Object,
+      default: {},
+    },
+
     itinerary: {
       type: String,
     },
 
     shareId: {
       type: String,
+      unique: true,
+    },
+    isShared: {
+      type: Boolean,
+      default: true,
+    },
+
+    sharedAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-module.exports = mongoose.model(
-  "Itinerary",
-  itinerarySchema
-);
+module.exports = mongoose.model("Itinerary", itinerarySchema);

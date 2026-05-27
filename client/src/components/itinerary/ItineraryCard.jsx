@@ -15,8 +15,8 @@ const buildDays = (details) => {
   if (Array.isArray(details?.itinerary)) return details.itinerary;
 
   const destination = details?.destination || "your destination";
-  const hotel = details?.hotel || "your hotel";
-  const timings = details?.timings || "the travel timings";
+  const hotel = details?.hotel || null;
+  const timings = details?.timings || null;
   const suggestions = splitList(details?.suggestions);
 
   return [
@@ -105,7 +105,9 @@ const ItineraryCard = ({ details }) => {
                     <Hotel className="h-4 w-4" />
                     Stay
                   </div>
-                  <p className="text-sm font-semibold text-white">{day.hotel || details?.hotel || "Hotel pending"}</p>
+                  <p className="text-sm font-semibold text-white">
+                    {day.hotel || details?.hotel || "No stay details available"}
+                  </p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-slate-950/30 p-3">
                   <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">

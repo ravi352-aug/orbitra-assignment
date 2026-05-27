@@ -3,11 +3,11 @@ import axios from 'axios'
 // ── Axios Instance ──────────────────────────────────────────────
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
-  headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 })
 
 // Attach JWT token to every request if present
+// For JSON requests, axios will still set the correct header automatically.
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('travelai_token')

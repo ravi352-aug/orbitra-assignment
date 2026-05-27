@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 
 const DashboardLayout = ({ children, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user: authUser } = useAuth();
+  const currentUser = user || authUser;
 
   return (
     <div className="relative flex min-h-screen overflow-hidden bg-[#070b18] text-slate-100">
@@ -15,7 +18,7 @@ const DashboardLayout = ({ children, user }) => {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="relative z-10 flex min-w-0 flex-1 flex-col lg:pl-72">
-        <Navbar onMenuClick={() => setSidebarOpen(true)} user={user} />
+        <Navbar onMenuClick={() => setSidebarOpen(true)} user={currentUser} />
         <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>

@@ -34,6 +34,12 @@ export function AuthProvider({ children }) {
     navigate('/dashboard')
   }
 
+  const updateUser = (updatedUser) => {
+    setUser(updatedUser)
+    localStorage.setItem('travelai_user', JSON.stringify(updatedUser))
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+  }
+
   const logout = () => {
     setUser(null)
     setToken(null)
@@ -47,7 +53,7 @@ export function AuthProvider({ children }) {
   const isAuthenticated = !!token
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   )

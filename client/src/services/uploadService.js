@@ -13,16 +13,13 @@ export const uploadService = {
 
     try {
       const response = await api.post("/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         onUploadProgress: (progressEvent) => {
           const total = progressEvent.total || progressEvent.loaded || 1;
           const percent = Math.round((progressEvent.loaded * 100) / total);
           if (onUploadProgress) onUploadProgress(percent);
         },
       });
-      return response.data;
+      return response.data.upload || response.data;
     } catch (error) {
       error.message = getErrorMessage(error, "Upload failed");
       throw error;
