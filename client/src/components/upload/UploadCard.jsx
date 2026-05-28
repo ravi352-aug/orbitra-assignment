@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -83,7 +83,8 @@ const UploadCard = ({ onUploadSuccess }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             {...getRootProps()}
-            className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-300 p-10 text-center group ${borderColor}`}
+            className={`relative cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-300 p-6 sm:p-10 text-center group ${borderColor} bg-white/[0.02] hover:bg-white/[0.04] hover:shadow-[0_0_30px_rgba(20,184,166,0.05)]`}
+
           >
             <input {...getInputProps()} />
 
@@ -101,19 +102,20 @@ const UploadCard = ({ onUploadSuccess }) => {
 
             {/* Upload Icon */}
             <motion.div
-              animate={isDragActive ? { scale: 1.12, y: -4 } : { scale: 1, y: 0 }}
+              animate={isDragActive ? { scale: 1.08, y: -3 } : { scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="mx-auto mb-5 w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30 flex items-center justify-center group-hover:from-teal-500/30 group-hover:to-cyan-500/30 transition-all duration-300"
+              className="mx-auto mb-5 w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500/10 to-cyan-500/10 border border-teal-500/20 flex items-center justify-center group-hover:scale-105 transition-all duration-300"
             >
-              <svg className="w-7 h-7 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+              <svg className="w-8 h-8 text-teal-400/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                 />
               </svg>
             </motion.div>
 
-            <h3 className="text-base font-semibold text-white mb-1">
-              {isDragActive ? "Release to drop your file" : "Drag & drop your document"}
+            <h3 className="text-lg font-bold text-white mb-1 tracking-tight">
+              {isDragActive ? "Drop to upload" : "Drop travel documents here"}
             </h3>
             <p className="text-sm text-slate-400 mb-4">
               or{" "}
@@ -121,13 +123,13 @@ const UploadCard = ({ onUploadSuccess }) => {
                 browse to choose
               </span>
             </p>
-            <div className="flex items-center justify-center gap-2 flex-wrap">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
               {["PDF", "JPG", "PNG"].map((ext) => (
-                <span key={ext} className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 font-medium">
+                <span key={ext} className="text-[10px] uppercase tracking-wider px-3 py-1 rounded-md bg-white/5 border border-white/10 text-slate-400 font-bold">
                   {ext}
                 </span>
               ))}
-              <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-slate-400 font-medium">
+              <span className="text-[10px] uppercase tracking-wider px-3 py-1 rounded-md bg-white/5 border border-white/10 text-slate-500 font-bold">
                 Max 10 MB
               </span>
             </div>

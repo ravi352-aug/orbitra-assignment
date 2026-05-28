@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Cpu, FileText, Loader2, Map, Share2, Sparkles, Upload } from "lucide-react";
+import { Cpu, FileText, Loader2, Map, RefreshCw, Share2, Sparkles, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 
 import DashboardLayout from "../components/dashboard/DashboardLayout";
@@ -242,42 +242,75 @@ const Dashboard = () => {
         <HeroSection user={user} />
 
         {hasAnyError ? (
-          <div className="rounded-3xl border border-amber-400/20 bg-amber-400/10 px-5 py-4 text-sm text-amber-100">
-            Some dashboard data could not be loaded. Available sections are
-            still shown below.
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border border-amber-400/20 bg-amber-400/10 px-4 py-4 sm:px-5 sm:py-5 text-sm text-amber-100 flex items-start justify-between gap-4"
+          >
+            <div>
+              <p className="font-semibold text-amber-200">⚠️ Some data unavailable</p>
+              <p className="mt-1 text-xs text-amber-100/80">
+                Dashboard sections that failed to load are shown below. Please refresh the page if the issue persists.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadDashboard()}
+              className="shrink-0 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs font-semibold text-amber-200 transition hover:bg-amber-400/20"
+              aria-label="Retry loading dashboard data"
+            >
+              <RefreshCw className="h-3 w-3" />
+            </button>
+          </motion.div>
         ) : null}
 
-        <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/10 backdrop-blur-xl">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+        {/* ─── Top Section: Analytics & Score ─── */}
+        <section className="grid gap-5 grid-cols-1 md:grid-cols-2">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08 }}
+            className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 sm:p-6 shadow-xl shadow-black/10 backdrop-blur-xl"
+          >
+            <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col gap-1">
                 <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">Performance insight</p>
-                <h2 className="mt-2 text-2xl font-bold text-white">Travel analytics</h2>
+                <h2 className="text-2xl font-bold text-white">Travel analytics</h2>
               </div>
-              <div className="rounded-3xl bg-slate-950/80 px-4 py-3 text-sm text-slate-300">
-                Top transport type: <span className="font-semibold text-white">{stats.mostUsedTransport || "-"}</span>
-              </div>
+              <p className="text-sm text-slate-400">
+                See your document processing trends, itinerary growth, and transport usage.
+              </p>
             </div>
-            <p className="mt-3 text-sm text-slate-400">
-              See your document processing trends, itinerary growth, and transport usage in one view.
-            </p>
-          </div>
-          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/10 backdrop-blur-xl">
-            <div className="text-sm text-slate-500">AI processing score</div>
-            <div className="mt-4 flex items-end gap-4">
-              <div className="flex-1 rounded-3xl bg-slate-950/80 p-4 text-center">
+            <div className="mt-5 rounded-2xl bg-slate-950/80 px-4 py-3 text-sm">
+              <p className="text-slate-400">Top transport type</p>
+              <p className="mt-2 text-xl font-bold text-white">{stats.mostUsedTransport || "—"}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 sm:p-6 shadow-xl shadow-black/10 backdrop-blur-xl"
+          >
+            <p className="text-sm text-slate-500">AI processing score</p>
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="rounded-2xl bg-slate-950/80 p-4 text-center">
                 <p className="text-3xl font-bold text-white">{stats.aiProcessed}</p>
-                <p className="mt-1 text-sm text-slate-400">AI-powered plans</p>
+                <p className="mt-2 text-xs text-slate-400">AI-powered plans</p>
               </div>
-              <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20">
-                <span className="text-xl font-bold">{stats.sharedTrips}</span>
+              <div className="flex items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 p-4 text-center text-white shadow-lg shadow-cyan-500/20">
+                <div>
+                  <p className="text-2xl font-bold">{stats.sharedTrips}</p>
+                  <p className="mt-1 text-xs text-cyan-100">Shared</p>
+                </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* ─── Stats Cards ─── */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statConfig.map(({ key, label, Icon, trend }, index) => (
             <StatsCard
               key={key}
@@ -291,16 +324,18 @@ const Dashboard = () => {
           ))}
         </section>
 
-        <section className="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_0.9fr]">
+        {/* ─── Upload Section ─── */}
+        <section className="grid gap-5 grid-cols-1 lg:grid-cols-[1.6fr_1fr]">
           <motion.div
+
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12, type: "spring", stiffness: 240, damping: 24 }}
-            className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/10 backdrop-blur-xl"
+            transition={{ delay: 0.14, type: "spring", stiffness: 240, damping: 24 }}
+            className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 sm:p-6 shadow-xl shadow-black/10 backdrop-blur-xl"
           >
-            <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="mb-5 flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300 ring-1 ring-cyan-400/20">
                   <FileText className="h-5 w-5" />
                 </div>
                 <div>
@@ -318,19 +353,22 @@ const Dashboard = () => {
                   type="button"
                   onClick={() => handleGenerateItinerary(latestUpload)}
                   disabled={isGenerating}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-500 to-blue-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-blue-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:translate-y-[-1px] active:translate-y-[0px] disabled:opacity-60 whitespace-nowrap"
+                  aria-busy={isGenerating}
                 >
                   {isGenerating ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Sparkles className="h-4 w-4" />
                   )}
-                  Generate AI Itinerary
+                  Generate
                 </button>
               ) : null}
             </div>
 
-            <UploadCard onUploadSuccess={handleUploadSuccess} />
+            <div className="flex-1">
+              <UploadCard onUploadSuccess={handleUploadSuccess} />
+            </div>
           </motion.div>
 
           <RecentUploads
@@ -339,19 +377,49 @@ const Dashboard = () => {
             error={errors.uploads}
             onGenerate={handleGenerateItinerary}
             generatingUploadId={generatingUploadId}
+            limit={3}
           />
+
         </section>
 
+        {/* ─── Itineraries Section ─── */}
         <RecentItineraries
           itineraries={itineraries}
           loading={loading.itineraries}
           error={errors.itineraries}
         />
 
-        <DashboardAnalytics analytics={analysis} loading={analyticsLoading} error={analyticsError} />
+        {/* ─── Analytics Section ─── */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {analyticsError ? (
+            <div className="rounded-3xl border border-red-400/20 bg-red-400/10 p-5 sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-semibold text-red-200">Analytics failed to load</p>
+                  <p className="mt-1 text-xs text-red-100/80">{analyticsError}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => loadDashboard()}
+                  className="shrink-0 rounded-xl border border-red-400/30 bg-red-400/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-400/20"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <DashboardAnalytics analytics={analysis} loading={analyticsLoading} error={analyticsError} />
+              <ActivityTimeline activities={analysis.recentActivities} loading={analyticsLoading} />
+            </>
+          )}
+        </motion.section>
 
-        <ActivityTimeline activities={analysis.recentActivities} loading={analyticsLoading} />
-
+        {/* ─── Generation Result ─── */}
         <AIResponseCard
           loading={isGenerating}
           error={generationError}
@@ -360,13 +428,19 @@ const Dashboard = () => {
         />
 
         {travelDetails ? (
-          <>
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24 }}
+            className="space-y-5"
+          >
             <TravelSummary details={travelDetails} />
             <ItineraryCard details={travelDetails} />
-          </>
+            {aiResult?.extractedText ? (
+              <ExtractionDetails extractedText={aiResult.extractedText} />
+            ) : null}
+          </motion.section>
         ) : null}
-
-        {aiResult ? <ExtractionDetails extractedText={aiResult.extractedText} /> : null}
       </div>
     </DashboardLayout>
   );

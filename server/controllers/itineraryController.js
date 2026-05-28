@@ -128,7 +128,6 @@ Day 3
 // example function
 
 const generateItinerary = async (req, res) => {
-
   try {
 
     const { uploadId } = req.body;

@@ -66,6 +66,7 @@ const UploadPage = () => {
   const [loadingUploads, setLoadingUploads] = useState(true);
   const [uploadsError, setUploadsError] = useState("");
   const [generatingUploadId, setGeneratingUploadId] = useState("");
+  const [generationStep, setGenerationStep] = useState("");
 
   const loadRecentUploads = useCallback(async () => {
     setLoadingUploads(true);
@@ -94,14 +95,17 @@ const UploadPage = () => {
       }
 
       setGeneratingUploadId(uploadIdValue);
-      toast.loading("Generating itinerary...");
+      setGenerationStep("Extracting and analyzing document");
+      const toastId = toast.loading("Generating itinerary...");
 
       try {
         const result = await itineraryService.generateItinerary(uploadIdValue);
         const itinerary = result.itinerary || result;
 
-        toast.dismiss();
-        toast.success("Itinerary generated successfully!");
+        if (!itinerary || !itinerary._id) {
+          throw new Error("Generated itinerary response is missing an ID.");
+        }
+
         setRecentUploads((current) =>
           current.map((item) =>
             item._id === uploadIdValue || item.id === uploadIdValue
@@ -113,13 +117,18 @@ const UploadPage = () => {
               : item,
           ),
         );
+
+        setGenerationStep("Finalizing itinerary");
         await loadRecentUploads();
+        toast.success("Itinerary generated successfully!", { id: toastId });
+        setGenerationStep("Redirecting to itinerary details...");
         navigate(`/itinerary/${itinerary._id}`);
       } catch (err) {
-        toast.dismiss();
+        toast.dismiss({ id: toastId });
         toast.error(err.message || "Unable to generate itinerary");
       } finally {
         setGeneratingUploadId("");
+        setGenerationStep("");
       }
     },
     [loadRecentUploads, navigate],
@@ -175,13 +184,13 @@ const UploadPage = () => {
         </motion.div>
 
         {/* ── Main Upload + Recent ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-stretch">
           {/* Upload Card */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15, duration: 0.4 }}
-            className="lg:col-span-3 p-5 rounded-3xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm"
+            className="p-6 rounded-3xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm shadow-xl flex flex-col"
           >
             <div className="flex items-center gap-3 mb-5">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-500/30 flex items-center justify-center">
@@ -190,13 +199,24 @@ const UploadPage = () => {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <div>
+              <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-white">Upload Travel Document</h2>
                 <p className="text-xs text-slate-500">PDF, JPG, or PNG — up to 10 MB</p>
               </div>
             </div>
 
             <UploadCard onUploadSuccess={handleUploadSuccess} />
+            {generationStep ? (
+              <div className="mt-4 rounded-2xl border border-white/10 bg-slate-950/80 p-4 text-sm text-slate-200">
+                <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                  <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-400" />
+                  {generationStep}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  This process checks your upload, extracts details, and creates a safe itinerary.
+                </p>
+              </div>
+            ) : null}
             {uploadId ? (
               <div className="mt-4 rounded-2xl border border-teal-500/20 bg-teal-500/5 p-4 text-sm text-teal-100">
                 Upload completed successfully. Upload ID saved for AI generation.
@@ -209,7 +229,7 @@ const UploadPage = () => {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.4 }}
-            className="lg:col-span-2 p-5 rounded-3xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm"
+            className="p-6 rounded-3xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm shadow-xl h-full"
           >
             <RecentUploads
             uploads={recentUploads}
@@ -290,4 +310,3 @@ const UploadPage = () => {
 };
 
 export default UploadPage;
-
