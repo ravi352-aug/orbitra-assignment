@@ -32,6 +32,12 @@ const uploadSchema = new mongoose.Schema(
       type: String,
       default: "uploaded",
     },
+
+    itineraryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Itinerary",
+      default: null,
+    },
   },
   {
     timestamps: true,

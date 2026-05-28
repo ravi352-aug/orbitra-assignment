@@ -143,25 +143,43 @@ const generateItinerary = async (req, res) => {
     }
 
     // Find upload
-    const upload =
-      await Upload.findById(uploadId);
+    const upload = await Upload.findById(uploadId);
 
     if (!upload) {
-
       return res.status(404).json({
         success: false,
         message: "Upload not found",
       });
-
     }
 
-    // example function
+    // If an itinerary already exists for this upload, return it instead of creating a duplicate
+    const existingItinerary = await Itinerary.findOne({
+      uploadId,
+      userId: req.user._id,
+    });
 
-    const extractedText =
-      await extractTextFromFile(
-        upload.filepath,
-        upload.mimetype
-      );
+    if (existingItinerary) {
+      await Upload.findByIdAndUpdate(uploadId, {
+        status: "processed",
+        itineraryId: existingItinerary._id,
+      });
+
+      return res.status(200).json({
+        success: true,
+        itinerary: existingItinerary,
+        existing: true,
+      });
+    }
+
+    // Mark upload as processing while the extraction begins
+    await Upload.findByIdAndUpdate(uploadId, {
+      status: "processing",
+    });
+
+    const extractedText = await extractTextFromFile(
+      upload.filepath,
+      upload.mimetype,
+    );
 
     const cleanedText =
       extractedText
@@ -345,73 +363,38 @@ Rules:
 
     // example function
 
-    const itinerary =
-      await Itinerary.create({
+    const itinerary = await Itinerary.create({
+      userId: req.user._id,
+      uploadId,
+      title:
+        normalizedParsed.destination &&
+        normalizedParsed.travelDate
+          ? `${normalizedParsed.destination} • ${normalizedParsed.travelDate}`
+          : "Untitled Trip",
+      extractedText,
+      aiResponse,
+      extractedData: normalizedParsed,
+      destination: normalizedParsed.destination || "",
+      source: normalizedParsed.source || "",
+      travelDate: normalizedParsed.travelDate || "",
+      transportType: normalizedParsed.transportType || "",
+      trainName: normalizedParsed.trainName || "",
+      trainNumber: normalizedParsed.trainNumber || "",
+      pnr: normalizedParsed.pnr || "",
+      departureTime: normalizedParsed.departureTime || "",
+      arrivalTime: normalizedParsed.arrivalTime || "",
+      passengerName: normalizedParsed.passengerName || "",
+      airline: normalizedParsed.airline || "",
+      hotel: normalizedParsed.hotel || "",
+      bookingReference: normalizedParsed.bookingReference || "",
+      itinerary: generatedItinerary,
+      shareId: uuidv4(),
+    });
 
-        userId: req.user._id,
-
-        uploadId,
-
-        title:
-          normalizedParsed.destination &&
-          normalizedParsed.travelDate
-            ? `${normalizedParsed.destination} • ${normalizedParsed.travelDate}`
-            : "Untitled Trip",
-
-        extractedText,
-
-        aiResponse,
-
-        extractedData:
-          normalizedParsed,
-
-        destination:
-          normalizedParsed.destination || "",
-
-        source:
-          normalizedParsed.source || "",
-
-        travelDate:
-          normalizedParsed.travelDate || "",
-
-        transportType:
-          normalizedParsed.transportType || "",
-
-        trainName:
-          normalizedParsed.trainName || "",
-
-        trainNumber:
-          normalizedParsed.trainNumber || "",
-
-        pnr:
-          normalizedParsed.pnr || "",
-
-        departureTime:
-          normalizedParsed.departureTime || "",
-
-        arrivalTime:
-          normalizedParsed.arrivalTime || "",
-
-        passengerName:
-          normalizedParsed.passengerName || "",
-
-        airline:
-          normalizedParsed.airline || "",
-
-        hotel:
-          normalizedParsed.hotel || "",
-
-        bookingReference:
-          normalizedParsed.bookingReference || "",
-
-        itinerary:
-          generatedItinerary,
-
-        shareId: uuidv4(),
-
-      });
-
-    // example function
+    await Upload.findByIdAndUpdate(uploadId, {
+      status: "processed",
+      itineraryId: itinerary._id,
+    });
 
     res.status(200).json({
       success: true,
@@ -420,17 +403,21 @@ Rules:
     });
 
   } catch (error) {
-
     console.error(
       "Generate Itinerary Error:",
       error
     );
 
+    if (uploadId) {
+      await Upload.findByIdAndUpdate(uploadId, {
+        status: "failed",
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 
 };

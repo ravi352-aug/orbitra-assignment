@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Cpu, FileText, Loader2, Map, Share2, Sparkles, Upload } from "lucide-react";
 import toast from "react-hot-toast";
@@ -70,6 +71,7 @@ const getUploadId = (upload) => upload?._id || upload?.id || upload?.uploadId;
 const Dashboard = () => {
   const { user } = useAuth();
   const { addNotification } = useNotifications();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(defaultStats);
   const [uploads, setUploads] = useState([]);
   const [itineraries, setItineraries] = useState([]);
@@ -181,6 +183,9 @@ const Dashboard = () => {
           type: "success",
         });
         window.setTimeout(() => loadDashboard({ silent: true }), 1200);
+        if (result?._id) {
+          navigate(`/itinerary/${result._id}`);
+        }
       } catch (error) {
         setGenerationError(error.message);
         toast.error(error.message);
@@ -188,7 +193,7 @@ const Dashboard = () => {
         setGeneratingUploadId("");
       }
     },
-    [loadDashboard],
+    [loadDashboard, navigate],
   );
 
   const handleUploadSuccess = useCallback(

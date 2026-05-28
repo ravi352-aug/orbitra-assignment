@@ -18,6 +18,7 @@ const navItems = [
   { to: "/upload", label: "Upload Documents", Icon: Upload },
   { to: "/itineraries", label: "Itineraries", Icon: Map },
   { to: "/shared", label: "Shared Trips", Icon: Share2 },
+  { to: "/profile", label: "Profile", Icon: User },
   { to: "/settings", label: "Settings", Icon: Settings },
 ];
 
@@ -27,7 +28,7 @@ const SidebarContent = ({ onClose }) => {
   const userName = user?.name || "Traveler";
 
   return (
-    <div className="flex h-full flex-col border-r border-white/10 bg-slate-950/70 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+    <div className="flex h-full min-h-0 flex-col border-r border-white/10 bg-slate-950/70 shadow-2xl shadow-black/40 backdrop-blur-2xl overflow-y-auto">
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 via-cyan-500 to-indigo-500 shadow-lg shadow-cyan-500/20">
@@ -156,7 +157,7 @@ const Sidebar = ({ open, onClose }) => {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 32 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-72 lg:hidden overflow-y-auto"
             >
               <SidebarContent onClose={onClose} />
             </motion.aside>

@@ -46,8 +46,10 @@ const ItineraryDetails = () => {
                   onClick={async () => {
                     try {
                       const res = await itineraryService.toggleShareTrip(itinerary._id);
-                      const next = res.itinerary || res;
-                      setItinerary(next);
+                      setItinerary((current) => ({
+                        ...current,
+                        isShared: res.isShared,
+                      }));
                       toast.success('Share state updated');
                     } catch (err) {
                       toast.error(err.message || 'Unable to toggle share');

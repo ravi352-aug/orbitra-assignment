@@ -186,29 +186,39 @@ const getDashboardAnalytics = async (req, res) => {
 
 // Recent Uploads
 const getRecentUploads = async (req, res) => {
-
   try {
-
     const uploads = await Upload.find({
       userId: req.user._id,
     })
       .sort({ createdAt: -1 })
       .limit(5);
 
+    const itineraryMap = await Itinerary.find({
+      userId: req.user._id,
+      uploadId: { $in: uploads.map((upload) => upload._id) },
+    }).select("uploadId _id");
+
+    const itineraryByUpload = itineraryMap.reduce((acc, itinerary) => {
+      acc[itinerary.uploadId.toString()] = itinerary._id;
+      return acc;
+    }, {});
+
+    const normalizedUploads = uploads.map((upload) => ({
+      ...upload.toObject(),
+      itineraryId: itineraryByUpload[upload._id.toString()] || upload.itineraryId || null,
+      status: itineraryByUpload[upload._id.toString()] ? "processed" : upload.status,
+    }));
+
     res.status(200).json({
       success: true,
-      uploads,
+      uploads: normalizedUploads,
     });
-
   } catch (error) {
-
     res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
-
 };
 
 

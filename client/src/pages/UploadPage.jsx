@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import UploadCard from "../components/upload/UploadCard";
-import RecentUploads from "../components/upload/RecentUploads";
+import RecentUploads from "../components/dashboard/RecentUploads";
+import { dashboardService } from "../services/dashboardService";
+import { itineraryService } from "../services/itineraryService";
+import toast from "react-hot-toast";
 
 /* ─── Upload instructions ──────────────────────────────── */
 const INSTRUCTIONS = [
@@ -56,23 +60,90 @@ const STATS = [
 
 /* ═══════════════════════════════════════════════════════ */
 const UploadPage = () => {
+  const navigate = useNavigate();
   const [recentUploads, setRecentUploads] = useState([]);
   const [uploadId, setUploadId] = useState(null);
+  const [loadingUploads, setLoadingUploads] = useState(true);
+  const [uploadsError, setUploadsError] = useState("");
+  const [generatingUploadId, setGeneratingUploadId] = useState("");
 
-  const handleUploadSuccess = (result, file) => {
+  const loadRecentUploads = useCallback(async () => {
+    setLoadingUploads(true);
+    setUploadsError("");
+    try {
+      const response = await dashboardService.getRecentUploads();
+      const uploads = response.uploads || response;
+      setRecentUploads(uploads);
+    } catch (err) {
+      setUploadsError(err.message || "Unable to load uploads");
+    } finally {
+      setLoadingUploads(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRecentUploads();
+  }, [loadRecentUploads]);
+
+  const handleGenerateItinerary = useCallback(
+    async (upload) => {
+      const uploadIdValue = upload?._id || upload?.id || upload?.uploadId;
+      if (!uploadIdValue) {
+        toast.error("Upload id was not found");
+        return;
+      }
+
+      setGeneratingUploadId(uploadIdValue);
+      toast.loading("Generating itinerary...");
+
+      try {
+        const result = await itineraryService.generateItinerary(uploadIdValue);
+        const itinerary = result.itinerary || result;
+
+        toast.dismiss();
+        toast.success("Itinerary generated successfully!");
+        setRecentUploads((current) =>
+          current.map((item) =>
+            item._id === uploadIdValue || item.id === uploadIdValue
+              ? {
+                  ...item,
+                  status: "processed",
+                  itineraryId: itinerary._id,
+                }
+              : item,
+          ),
+        );
+        await loadRecentUploads();
+        navigate(`/itinerary/${itinerary._id}`);
+      } catch (err) {
+        toast.dismiss();
+        toast.error(err.message || "Unable to generate itinerary");
+      } finally {
+        setGeneratingUploadId("");
+      }
+    },
+    [loadRecentUploads, navigate],
+  );
+
+  const handleUploadSuccess = async (result, file) => {
     const upload = result?.upload || result;
     const id = upload?._id || upload?.id || Date.now();
     setUploadId(id);
     setRecentUploads((prev) => [
       {
+        _id: upload?._id || id,
         id,
-        name: upload?.filename || file.name,
+        filename: upload?.filename || file.name,
         size: upload?.size || file.size,
-        type: upload?.mimetype || file.type,
-        uploadedAt: upload?.createdAt || new Date().toISOString(),
+        mimetype: upload?.mimetype || file.type,
+        createdAt: upload?.createdAt || new Date().toISOString(),
+        status: upload?.status || "uploaded",
+        filepath: upload?.filepath || null,
       },
       ...prev,
     ]);
+
+    await loadRecentUploads();
   };
 
   return (
@@ -140,7 +211,13 @@ const UploadPage = () => {
             transition={{ delay: 0.22, duration: 0.4 }}
             className="lg:col-span-2 p-5 rounded-3xl bg-white/[0.04] border border-white/[0.07] backdrop-blur-sm"
           >
-            <RecentUploads uploads={recentUploads} />
+            <RecentUploads
+            uploads={recentUploads}
+            loading={loadingUploads}
+            error={uploadsError}
+            onGenerate={handleGenerateItinerary}
+            generatingUploadId={generatingUploadId}
+          />
           </motion.div>
         </div>
 

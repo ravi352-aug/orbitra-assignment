@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   AlertCircle,
   CheckCircle2,
@@ -133,14 +134,22 @@ const RecentUploads = ({
           {uploads.map((item, index) => {
             const fileKind = getFileKind(item);
             const Icon = fileKind === "pdf" ? FileText : Image;
+            const uploadId = item._id || item.id;
+            const viewItinerary = item.itineraryId;
+            const rawPath = item.filepath ? item.filepath.replace(/\\/g, "/") : "";
+            const fileUrl = rawPath.includes("/uploads")
+              ? rawPath.slice(rawPath.indexOf("/uploads"))
+              : item.filename
+              ? `/uploads/${item.filename}`
+              : null;
 
             return (
               <motion.li
-                key={item._id || item.id || `${item.filename}-${index}`}
+                key={uploadId || `${item.filename}-${index}`}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.04 }}
-                className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.04] p-3 transition hover:bg-white/[0.08]"
+                className="flex flex-col gap-3 rounded-2xl border border-white/5 bg-white/[0.04] p-3 transition hover:bg-white/[0.08] sm:flex-row sm:items-center"
               >
                 <div
                   className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${
@@ -155,26 +164,46 @@ const RecentUploads = ({
                   <p className="truncate text-sm font-bold text-slate-100">
                     {item.filename || item.name || "Travel document"}
                   </p>
-                  <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-                    <Clock className="h-3 w-3" />
-                    {formatTime(item.createdAt || item.uploadedAt)}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatTime(item.createdAt || item.uploadedAt)}
+                    </span>
+                    <span>{item.status ? item.status.toUpperCase() : "UPLOADED"}</span>
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {onGenerate ? (
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {viewItinerary ? (
+                    <Link
+                      to={`/itinerary/${viewItinerary}`}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs font-bold text-emerald-200 transition hover:bg-emerald-400/20"
+                    >
+                      View itinerary
+                    </Link>
+                  ) : onGenerate ? (
                     <button
                       type="button"
                       onClick={() => onGenerate(item)}
-                      disabled={generatingUploadId === item._id}
-                      className="hidden items-center gap-1.5 rounded-xl border border-violet-400/20 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-200 transition hover:bg-violet-400/15 disabled:cursor-not-allowed disabled:opacity-60 sm:inline-flex"
+                      disabled={generatingUploadId === uploadId}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-violet-400/20 bg-violet-400/10 px-3 py-2 text-xs font-bold text-violet-200 transition hover:bg-violet-400/15 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {generatingUploadId === item._id ? (
+                      {generatingUploadId === uploadId ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
                         <Sparkles className="h-3.5 w-3.5" />
                       )}
                       Generate
                     </button>
+                  ) : null}
+                  {fileUrl ? (
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:bg-white/10"
+                    >
+                      View file
+                    </a>
                   ) : null}
                   <StatusBadge status={item.status} />
                 </div>
