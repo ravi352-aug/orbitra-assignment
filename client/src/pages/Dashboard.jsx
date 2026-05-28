@@ -8,12 +8,15 @@ import HeroSection from "../components/dashboard/HeroSection";
 import RecentItineraries from "../components/dashboard/RecentItineraries";
 import RecentUploads from "../components/dashboard/RecentUploads";
 import StatsCard from "../components/dashboard/StatsCard";
+import DashboardAnalytics from "../components/analytics/DashboardAnalytics";
+import ActivityTimeline from "../components/analytics/ActivityTimeline";
 import AIResponseCard from "../components/itinerary/AIResponseCard";
 import ExtractionDetails from "../components/itinerary/ExtractionDetails";
 import ItineraryCard from "../components/itinerary/ItineraryCard";
 import TravelSummary from "../components/itinerary/TravelSummary";
 import UploadCard from "../components/upload/UploadCard";
 import { useAuth } from "../context/AuthContext";
+import { useNotifications } from "../context/NotificationContext";
 import { dashboardService } from "../services/dashboardService";
 import { itineraryService } from "../services/itineraryService";
 
@@ -22,6 +25,13 @@ const defaultStats = {
   totalItineraries: 0,
   sharedTrips: 0,
   aiProcessed: 0,
+};
+
+const defaultAnalytics = {
+  uploadsPerWeek: [],
+  itinerariesPerMonth: [],
+  transportDistribution: [],
+  recentActivities: [],
 };
 
 const statConfig = [
@@ -59,9 +69,11 @@ const getUploadId = (upload) => upload?._id || upload?.id || upload?.uploadId;
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
   const [stats, setStats] = useState(defaultStats);
   const [uploads, setUploads] = useState([]);
   const [itineraries, setItineraries] = useState([]);
+  const [analysis, setAnalysis] = useState(defaultAnalytics);
   const [latestUpload, setLatestUpload] = useState(null);
   const [aiResult, setAiResult] = useState(null);
   const [generatingUploadId, setGeneratingUploadId] = useState("");
@@ -71,6 +83,8 @@ const Dashboard = () => {
     uploads: true,
     itineraries: true,
   });
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState("");
   const [errors, setErrors] = useState({
     stats: "",
     uploads: "",
@@ -81,13 +95,16 @@ const Dashboard = () => {
     if (!silent) {
       setLoading({ stats: true, uploads: true, itineraries: true });
       setErrors({ stats: "", uploads: "", itineraries: "" });
+      setAnalyticsLoading(true);
+      setAnalyticsError("");
     }
 
-    const [statsResult, uploadsResult, itinerariesResult] =
+    const [statsResult, uploadsResult, itinerariesResult, analyticsResult] =
       await Promise.allSettled([
         dashboardService.getStats(),
         dashboardService.getRecentUploads(),
         dashboardService.getRecentItineraries(),
+        dashboardService.getAnalytics(),
       ]);
 
     if (statsResult.status === "fulfilled") {
@@ -124,7 +141,18 @@ const Dashboard = () => {
       }));
     }
 
+    if (analyticsResult.status === "fulfilled") {
+      setAnalysis(analyticsResult.value.analytics || defaultAnalytics);
+      setAnalyticsError("");
+    } else {
+      setAnalysis(defaultAnalytics);
+      setAnalyticsError(
+        analyticsResult.reason?.message || "Unable to load analytics data",
+      );
+    }
+
     setLoading({ stats: false, uploads: false, itineraries: false });
+    setAnalyticsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -147,6 +175,11 @@ const Dashboard = () => {
         const result = await itineraryService.generateItinerary(uploadId);
         setAiResult(result);
         toast.success("AI itinerary generated");
+        addNotification({
+          title: "Itinerary generated",
+          description: `${result.title || "Your trip"} is ready to view.`,
+          type: "success",
+        });
         window.setTimeout(() => loadDashboard({ silent: true }), 1200);
       } catch (error) {
         setGenerationError(error.message);
@@ -180,6 +213,11 @@ const Dashboard = () => {
         aiProcessed: (current.aiProcessed || 0) + 1,
       }));
       toast.success("Upload ready for AI generation");
+      addNotification({
+        title: "Document uploaded",
+        description: `${optimisticUpload.filename} is ready for AI parsing.`,
+        type: "info",
+      });
       window.setTimeout(() => loadDashboard({ silent: true }), 1500);
     },
     [loadDashboard],
@@ -204,6 +242,35 @@ const Dashboard = () => {
             still shown below.
           </div>
         ) : null}
+
+        <section className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/10 backdrop-blur-xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.28em] text-cyan-300">Performance insight</p>
+                <h2 className="mt-2 text-2xl font-bold text-white">Travel analytics</h2>
+              </div>
+              <div className="rounded-3xl bg-slate-950/80 px-4 py-3 text-sm text-slate-300">
+                Top transport type: <span className="font-semibold text-white">{stats.mostUsedTransport || "-"}</span>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-slate-400">
+              See your document processing trends, itinerary growth, and transport usage in one view.
+            </p>
+          </div>
+          <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-5 shadow-xl shadow-black/10 backdrop-blur-xl">
+            <div className="text-sm text-slate-500">AI processing score</div>
+            <div className="mt-4 flex items-end gap-4">
+              <div className="flex-1 rounded-3xl bg-slate-950/80 p-4 text-center">
+                <p className="text-3xl font-bold text-white">{stats.aiProcessed}</p>
+                <p className="mt-1 text-sm text-slate-400">AI-powered plans</p>
+              </div>
+              <div className="inline-flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/20">
+                <span className="text-xl font-bold">{stats.sharedTrips}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {statConfig.map(({ key, label, Icon, trend }, index) => (
@@ -270,6 +337,16 @@ const Dashboard = () => {
           />
         </section>
 
+        <RecentItineraries
+          itineraries={itineraries}
+          loading={loading.itineraries}
+          error={errors.itineraries}
+        />
+
+        <DashboardAnalytics analytics={analysis} loading={analyticsLoading} error={analyticsError} />
+
+        <ActivityTimeline activities={analysis.recentActivities} loading={analyticsLoading} />
+
         <AIResponseCard
           loading={isGenerating}
           error={generationError}
@@ -285,12 +362,6 @@ const Dashboard = () => {
         ) : null}
 
         {aiResult ? <ExtractionDetails extractedText={aiResult.extractedText} /> : null}
-
-        <RecentItineraries
-          itineraries={itineraries}
-          loading={loading.itineraries}
-          error={errors.itineraries}
-        />
       </div>
     </DashboardLayout>
   );

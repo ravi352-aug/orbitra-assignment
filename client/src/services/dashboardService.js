@@ -35,6 +35,15 @@ export const dashboardService = {
       );
     }
   },
+
+  async getAnalytics() {
+    try {
+      const response = await api.get("/dashboard/analytics");
+      return response.data;
+    } catch (error) {
+      throw new Error(getErrorMessage(error, "Unable to load dashboard analytics"));
+    }
+  },
 };
 
 export const fetchDashboardStats = () => dashboardService.getStats();

@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import { useNotifications } from "../../context/NotificationContext";
 
 const getInitials = (name = "Traveler") =>
   name
@@ -23,8 +24,11 @@ const getInitials = (name = "Traveler") =>
 
 const Navbar = ({ onMenuClick, user }) => {
   const { logout } = useAuth();
+  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const profileRef = useRef(null);
+  const notificationsRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -34,17 +38,30 @@ const Navbar = ({ onMenuClick, user }) => {
   };
 
   useEffect(() => {
-    if (!profileOpen) return;
+    if (!profileOpen && !notificationsOpen) return;
 
     const handleClickOutside = (event) => {
-      if (profileRef.current && !profileRef.current.contains(event.target)) {
+      if (
+        profileOpen &&
+        profileRef.current &&
+        !profileRef.current.contains(event.target)
+      ) {
         setProfileOpen(false);
+      }
+
+      if (
+        notificationsOpen &&
+        notificationsRef.current &&
+        !notificationsRef.current.contains(event.target)
+      ) {
+        setNotificationsOpen(false);
       }
     };
 
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         setProfileOpen(false);
+        setNotificationsOpen(false);
       }
     };
 
@@ -55,7 +72,7 @@ const Navbar = ({ onMenuClick, user }) => {
       document.removeEventListener("mousedown", handleClickOutside);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [profileOpen]);
+  }, [profileOpen, notificationsOpen]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/55 px-4 py-3 backdrop-blur-2xl sm:px-6 lg:px-8">
@@ -85,14 +102,69 @@ const Navbar = ({ onMenuClick, user }) => {
           />
         </div>
 
-        <button
-          type="button"
-          className="relative rounded-xl p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-cyan-300 ring-2 ring-slate-950" />
-        </button>
+        <div className="relative" ref={notificationsRef}>
+          <button
+            type="button"
+            onClick={() => setNotificationsOpen((current) => !current)}
+            className="relative rounded-xl p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+            aria-label="Notifications"
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 ? (
+              <span className="absolute right-1 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-cyan-300 text-[10px] text-slate-950">
+                {unreadCount}
+              </span>
+            ) : (
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-cyan-300 ring-2 ring-slate-950" />
+            )}
+          </button>
+
+          <AnimatePresence>
+            {notificationsOpen ? (
+              <motion.div
+                initial={{ opacity: 0, y: -12, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.96 }}
+                transition={{ duration: 0.16 }}
+                className="absolute right-0 z-50 mt-2 w-80 overflow-hidden rounded-3xl border border-white/10 bg-slate-950/95 shadow-2xl shadow-black/40 backdrop-blur-xl"
+              >
+                <div className="flex items-center justify-between gap-2 border-b border-white/10 px-4 py-3">
+                  <div>
+                    <p className="font-semibold text-white">Notifications</p>
+                    <p className="text-xs text-slate-500">Recent system alerts.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={markAllRead}
+                    className="rounded-2xl bg-white/5 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-white/10"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-5 text-sm text-slate-500">No notifications yet.</div>
+                  ) : (
+                    notifications.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => markRead(item.id)}
+                        className={`flex w-full items-start gap-3 border-b border-white/10 px-4 py-4 text-left transition hover:bg-white/5 ${item.read ? "bg-slate-950" : "bg-white/5"}`}
+                      >
+                        <span className={`mt-1 h-2.5 w-2.5 rounded-full ${item.read ? "bg-slate-600" : "bg-cyan-400"}`}></span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-white">{item.title}</p>
+                          <p className="mt-1 text-xs text-slate-500">{item.description}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
 
         <div className="relative" ref={profileRef}>
           <button

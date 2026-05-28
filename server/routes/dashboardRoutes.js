@@ -6,6 +6,7 @@ const protect = require("../middleware/authMiddleware");
 
 const {
   getDashboardStats,
+  getDashboardAnalytics,
   getRecentUploads,
   getRecentItineraries,
 } = require("../controllers/dashboardController");
@@ -13,7 +14,7 @@ const {
 
 // Protected Routes
 router.get("/stats", protect, getDashboardStats);
-
+router.get("/analytics", protect, getDashboardAnalytics);
 router.get(
   "/recent-uploads",
   protect,

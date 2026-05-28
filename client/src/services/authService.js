@@ -26,6 +26,20 @@ api.interceptors.response.use(
       error.response?.data?.error ||
       error.message ||
       'Something went wrong. Please try again.'
+
+    // Global 401 handling: clear auth and redirect to login
+    if (error.response?.status === 401) {
+      try {
+        localStorage.removeItem('travelai_token')
+        localStorage.removeItem('travelai_user')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      } catch (e) {}
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login'
+      }
+    }
+
     return Promise.reject(new Error(message))
   }
 )
