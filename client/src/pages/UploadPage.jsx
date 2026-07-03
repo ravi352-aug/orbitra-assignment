@@ -95,37 +95,40 @@ const UploadPage = () => {
       }
 
       setGeneratingUploadId(uploadIdValue);
-      setGenerationStep("Extracting and analyzing document");
-      const toastId = toast.loading("Generating itinerary...");
+      setGenerationStep("Generating your trip itinerary...");
+      const toastId = toast.loading("AI is crafting your itinerary...");
 
       try {
-        const result = await itineraryService.generateItinerary(uploadIdValue);
-        const itinerary = result.itinerary || result;
+        console.log("[UploadPage] Starting generation for upload:", uploadIdValue);
+        const response = await itineraryService.generateItinerary(uploadIdValue);
+        console.log("[UploadPage] Generation response received:", response);
 
-        if (!itinerary || !itinerary._id) {
-          throw new Error("Generated itinerary response is missing an ID.");
+        const itinerary = response?.itinerary;
+        const itineraryId = itinerary?._id;
+
+        if (response?.success !== true || !itineraryId) {
+          throw new Error("The server did not return a valid itinerary ID.");
         }
 
-        setRecentUploads((current) =>
-          current.map((item) =>
-            item._id === uploadIdValue || item.id === uploadIdValue
-              ? {
-                  ...item,
-                  status: "processed",
-                  itineraryId: itinerary._id,
-                }
-              : item,
-          ),
-        );
+        if (response?.fallback) {
+          toast.success("AI unavailable - generated basic itinerary", { id: toastId });
+        } else {
+          toast.success("Itinerary generated!", { id: toastId });
+        }
+        setGenerationStep("Refreshing your itinerary list...");
 
-        setGenerationStep("Finalizing itinerary");
         await loadRecentUploads();
-        toast.success("Itinerary generated successfully!", { id: toastId });
-        setGenerationStep("Redirecting to itinerary details...");
-        navigate(`/itinerary/${itinerary._id}`);
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
+        navigate(`/itinerary/${itineraryId}`);
       } catch (err) {
-        toast.dismiss({ id: toastId });
-        toast.error(err.message || "Unable to generate itinerary");
+        toast.dismiss(toastId);
+        const message = err?.message || "Unable to generate itinerary";
+        toast.error(message);
+        console.error("[UploadPage] itinerary generation failed", {
+          uploadIdValue,
+          error: message,
+        });
       } finally {
         setGeneratingUploadId("");
         setGenerationStep("");

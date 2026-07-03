@@ -172,23 +172,44 @@ const Dashboard = () => {
 
       setGenerationError("");
       setGeneratingUploadId(uploadId);
+      const toastId = toast.loading("AI is parsing your document...");
 
       try {
-        const result = await itineraryService.generateItinerary(uploadId);
-        setAiResult(result);
-        toast.success("AI itinerary generated");
-        addNotification({
-          title: "Itinerary generated",
-          description: `${result.title || "Your trip"} is ready to view.`,
-          type: "success",
-        });
-        window.setTimeout(() => loadDashboard({ silent: true }), 1200);
-        if (result?._id) {
-          navigate(`/itinerary/${result._id}`);
+        console.log("[Dashboard] Initializing generation for:", uploadId);
+        const response = await itineraryService.generateItinerary(uploadId);
+        console.log("[Dashboard] Generation API successful:", response);
+
+        const itineraryId = response?.itinerary?._id;
+
+        if (response?.success !== true || !itineraryId) {
+          throw new Error("Failed to extract itinerary ID from response.");
         }
+
+        setAiResult(response);
+
+        if (response?.fallback) {
+          toast.success("AI unavailable - generated basic itinerary", { id: toastId });
+        } else {
+          toast.success("Itinerary crafted successfully!", { id: toastId });
+        }
+        addNotification({
+          title: response?.fallback ? "Basic itinerary generated" : "Itinerary generated",
+          description: response?.fallback
+            ? "AI was unavailable, so a safe fallback itinerary was saved."
+            : "Your trip is ready to view.",
+          type: response?.fallback ? "info" : "success",
+        });
+
+        console.log("[Dashboard] Redirecting to:", `/itinerary/${itineraryId}`);
+        navigate(`/itinerary/${itineraryId}`);
+        
+        // Refresh dashboard silently after starting navigation
+        loadDashboard({ silent: true });
       } catch (error) {
+        toast.dismiss(toastId);
         setGenerationError(error.message);
-        toast.error(error.message);
+        toast.error(error.message || "Unable to generate itinerary");
+        console.error("[Dashboard] itinerary generation failed", { uploadId, error });
       } finally {
         setGeneratingUploadId("");
       }

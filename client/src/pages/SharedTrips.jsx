@@ -46,15 +46,17 @@ const SharedTrips = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">Shared trips</h2>
-            <p className="text-xs text-slate-400 mt-1">Trips you've made public for sharing</p>
+            <p className="text-xs text-slate-400 mt-1">
+              Trips you&apos;ve made public for sharing
+            </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <SharedTripSkeleton key={i} />
             ))}
@@ -62,7 +64,7 @@ const SharedTrips = () => {
         ) : items.length === 0 ? (
           <EmptySharedState onRefresh={load} />
         ) : (
-          <motion.div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <motion.div className="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
             {items.map((it) => (
               <SharedTripCard
                 key={it._id}
@@ -85,3 +87,4 @@ const SharedTrips = () => {
 };
 
 export default SharedTrips;
+

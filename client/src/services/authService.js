@@ -11,8 +11,17 @@ const api = axios.create({
 // For JSON requests, axios will still set the correct header automatically.
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('travelai_token')
-    if (token) config.headers.Authorization = `Bearer ${token}`
+    const token =
+      localStorage.getItem('travelai_token') ||
+      localStorage.getItem('token')
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.debug("Auth token used for request:", token)
+    } else {
+      console.debug("No auth token found for request")
+    }
+
     return config
   },
   (error) => Promise.reject(error)

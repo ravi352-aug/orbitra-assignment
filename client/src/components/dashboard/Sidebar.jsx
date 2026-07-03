@@ -100,8 +100,8 @@ const SidebarContent = ({ onClose }) => {
         ))}
       </nav>
 
-      <div className="border-t border-white/[0.08] px-6 py-6">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="border-t border-white/[0.08] px-6 py-6">
+        <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-cyan-300 text-xs font-black ring-1 ring-white/10">
             {userName
               .split(" ")
@@ -115,16 +115,6 @@ const SidebarContent = ({ onClose }) => {
             <p className="truncate text-xs text-slate-500">View profile</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            navigate("/profile");
-            onClose?.();
-          }}
-          className="mt-3 flex w-full items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
-        >
-          Go to profile
-        </button>
       </div>
     </div>
   );
